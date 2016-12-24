@@ -17,8 +17,11 @@ checkInstallLoad <- function(libName)
 }
 
 
-#Calling the libraries for random Forest
+#Calling the libraries for Decision tree
 checkInstallLoad("RWeka")
 checkInstallLoad("partykit")
+
+#calling the libraries for Logistic Regression
+checkInstallLoad("car")
 
 print("============== Completed loading libraries  ===================")
