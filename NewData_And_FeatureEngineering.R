@@ -14,16 +14,37 @@ data = read.table("http://archive.ics.uci.edu/ml/machine-learning-databases/adul
 print("=====================Data Loaded===============================")
 
 #Data Dictionary
+View(head(data,20))
+ 
+#So first things first lets understand each column
+#1)Age-> Like i need to explian :p (continuous). 
+#2)workclass-> Private, Self-emp-not-inc, Self-emp-inc, Federal-gov, Local-gov, State-gov, Without-pay, Never-worked. 
+#3)fnlwgt-> continuous (have not quite understood this). 
+#4)education-> Bachelors, Some-college, 11th, HS-grad, Prof-school, Assoc-acdm, Assoc-voc, 9th, 7th-8th, 12th, Masters, 1st-4th, 10th, Doctorate, 5th-6th, Preschool. 
+#5)education-num->continuous (A numeruic representation of education). 
+#6)marital-status-> Married-civ-spouse, Divorced, Never-married, Separated, Widowed, Married-spouse-absent, Married-AF-spouse. 
+#7)occupation-> Tech-support, Craft-repair, Other-service, Sales, Exec-managerial, Prof-specialty, Handlers-cleaners, Machine-op-inspct, Adm-clerical, Farming-fishing, Transport-moving, Priv-house-serv, Protective-serv, Armed-Forces. 
+#8)relationship-> Wife, Own-child, Husband, Not-in-family, Other-relative, Unmarried. 
+#9)race-> White, Asian-Pac-Islander, Amer-Indian-Eskimo, Other, Black. 
+#10)sex-> Female, Male. 
+#11)capital-gain-> continuous. 
+#12)capital-loss-> continuous. 
+#13)hours-per-week-> continuous. 
+#14)native-country-> United-States, Cambodia, England, Puerto-Rico, Canada, Germany, Outlying-US(Guam-USVI-etc), India, Japan, Greece, South, China, Cuba, Iran, Honduras, Philippines, Italy, Poland, Jamaica, Vietnam, Mexico, Portugal, Ireland, France, Dominican-Republic, Laos, Ecuador, Taiwan, Haiti, Columbia, Hungary, Guatemala, Nicaragua, Scotland, Thailand, Yugoslavia, El-Salvador, Trinadad&Tobago, Peru, Hong, Holand-Netherlands.
 
-# Official pre-processing 
+
+#As we can clearly see from above education num is a numeric 
+#representation of education so we will go ahead and delete it
 data[["education_num"]]=NULL
-# eliminated education-num because it is just a numeric 
-#representation of education
 
 
 ########### Binning
+#What we will do here is convert our raw numeric fields into bins
+#wel do this for the ones it makes sense like age
+#=========================binning for Age==================
+#Age<18=child   18<Age<=30=Young Adult       
+#30<Age<=60=adult     Age>60=Senior
 ndata<-data
-#nrow(wdata)
 for (i in 1:nrow(ndata)){
   if(ndata[i,1]<=18){
     ndata[i,1]="child"
@@ -35,9 +56,10 @@ for (i in 1:nrow(ndata)){
     ndata[i,1]="senior"
   }
 }
-#View(head(ndata,20))
-#cut into levels Part-time (0-25),
-#Full-time (25-40), Over-time (40-60) and Too-much (60+).
+
+#=========================binning for Hours worked per week=======
+#HW<=25=Part Time   25<HW<=40=Full Time       
+#40<HW<=60=Over_Time     HW>61=Time To Much
 npdata<-ndata
 for (i in 1:nrow(npdata)){
   if(npdata[i,12]<=25){
@@ -52,8 +74,10 @@ for (i in 1:nrow(npdata)){
 }
 
 data<-npdata
-########### Factor to Character
+
+######################### Factor to Character
 #Convert factor variables to character
+#We do this for ease of processing
 fctr.cols <- sapply(data, is.factor)
 data[, fctr.cols] <- sapply(data[, fctr.cols], as.character)
 
@@ -67,7 +91,9 @@ data = na.omit(data)
 #######################################################################
 train_test<-data
 
-
+#Now in Employer Type we have so many , options more complexity right
+#So lets make just reduce them by using func GSUB
+#So now my complexity is reduced
 train_test$type_employer = gsub("^Federal-gov","Federal-Govt",train_test$type_employer)
 train_test$type_employer = gsub("^Local-gov","Other-Govt",train_test$type_employer)
 train_test$type_employer = gsub("^State-gov","Other-Govt",train_test$type_employer)
@@ -77,7 +103,7 @@ train_test$type_employer = gsub("^Self-emp-not-inc","Self-Employed",train_test$t
 train_test$type_employer = gsub("^Without-pay","Not-Working",train_test$type_employer)
 train_test$type_employer = gsub("^Never-worked","Not-Working",train_test$type_employer)
 
-
+#Similarly here
 train_test$occupation = gsub("^Adm-clerical","Admin",train_test$occupation)
 train_test$occupation = gsub("^Armed-Forces","Military",train_test$occupation)
 train_test$occupation = gsub("^Craft-repair","Blue-Collar",train_test$occupation)
@@ -93,7 +119,7 @@ train_test$occupation = gsub("^Sales","Sales",train_test$occupation)
 train_test$occupation = gsub("^Tech-support","Other-Occupations",train_test$occupation)
 train_test$occupation = gsub("^Transport-moving","Blue-Collar",train_test$occupation)
 
-
+#You are right counrty too
 train_test$country[train_test$country=="Cambodia"] = "SE-Asia"
 train_test$country[train_test$country=="Canada"] = "British-Commonwealth"    
 train_test$country[train_test$country=="China"] = "China"       
@@ -137,6 +163,7 @@ train_test$country[train_test$country=="Vietnam"] = "SE-Asia"
 train_test$country[train_test$country=="Yugoslavia"] = "Euro_2"
 
 
+#Education is most important
 train_test$education = gsub("^10th","Dropout",train_test$education)
 train_test$education = gsub("^11th","Dropout",train_test$education)
 train_test$education = gsub("^12th","Dropout",train_test$education)
@@ -154,7 +181,7 @@ train_test$education = gsub("^Preschool","Dropout",train_test$education)
 train_test$education = gsub("^Prof-school","Prof-School",train_test$education)
 train_test$education = gsub("^Some-college","HS-Graduate",train_test$education)
 
-# Similarly
+# Similarly marital
 train_test$marital[train_test$marital=="Never-married"] = "Never-Married"
 train_test$marital[train_test$marital=="Married-AF-spouse"] = "Married"
 train_test$marital[train_test$marital=="Married-civ-spouse"] = "Married"
@@ -163,12 +190,14 @@ train_test$marital[train_test$marital=="Separated"] = "Not-Married"
 train_test$marital[train_test$marital=="Divorced"] = "Not-Married"
 train_test$marital[train_test$marital=="Widowed"] = "Widowed"
 
+#Leaving race behind is racist no? :P
 train_test$race[train_test$race=="White"] = "White"
 train_test$race[train_test$race=="Black"] = "Black"
 train_test$race[train_test$race=="Amer-Indian-Eskimo"] = "Amer-Indian"
 train_test$race[train_test$race=="Asian-Pac-Islander"] = "Asian"
 train_test$race[train_test$race=="Other"] = "Other"
 
+#Getting income below or above 50K to High and low
 train_test$income[train_test$income==">50K"]="High"
 train_test$income[train_test$income=="<=50K"]="Low"
 
@@ -177,6 +206,7 @@ write.csv(x=train_test,file="ADULT_USI_FE_CATEGORICAL.csv")
 
 ######################################################################
 #Doing Label Encoding
+#This converts all categorical things to numeric
 features = names(train_test[,-14])
 for (f in features) {
   if (class(train_test[[f]])=="character") {
